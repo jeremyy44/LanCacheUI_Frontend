@@ -2,6 +2,7 @@
 @using DeveLanCacheUI_Frontend.ApiModels;
 @using DeveLanCacheUI_Frontend.Configuration;
 @using DeveLanCacheUI_Frontend.Services;
+@using DeveLanCacheUI_Frontend.TimeZoneComponent
 @using Microsoft.AspNetCore.SignalR.Client;
 @using System.Globalization;
 @inject HttpClient Http
@@ -23,8 +24,6 @@
         </span>
     }
 </h1>
-
-
 
 <table class="table">
     <thead>
@@ -60,7 +59,7 @@
             var imgUrl = appId != 0 ? $"https://cdn.cloudflare.steamstatic.com/steam/apps/{appId}/header.jpg" : "";
             <tr class="@(_localStorage.GetItem<bool>(LocalStorageField.CompactLayoutEnabled) ? "compact-layout" : "")">
                 <td>
-                    @downloadEvent.CreatedAt - @downloadEvent.LastUpdatedAt
+                     <LocalTime DateTime="downloadEvent.CreatedAt" /> - <LocalTime DateTime="downloadEvent.LastUpdatedAt" />
                 </td>
                 <td>
                     @if (appId != 0)

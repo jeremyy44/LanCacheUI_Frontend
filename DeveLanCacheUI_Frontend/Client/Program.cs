@@ -1,5 +1,6 @@
 using Blazored.LocalStorage;
 using DeveLanCacheUI_Frontend.Services;
+using DeveLanCacheUI_Frontend.TimeZoneComponent;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -15,6 +16,8 @@ namespace DeveLanCacheUI_Frontend
 
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             builder.Services.AddTransient<BackendConnectionService>();
+
+            builder.Services.AddBrowserTimeProvider();
 
             builder.Services.AddBlazoredLocalStorage();
 
