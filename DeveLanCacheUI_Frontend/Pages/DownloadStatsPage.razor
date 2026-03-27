@@ -11,123 +11,174 @@
 
 <PageTitle>Download Stats</PageTitle>
 
-<h1 id="client-download-stats">
-    Download Stats
-    <span class="status-ball @(hubConnection?.State == HubConnectionState.Connected ? "connected" : "disconnected")"
-          title="@(hubConnection?.State == HubConnectionState.Connected ? "Connected" : "Disconnected")">
-    </span>
-    @if (loading)
-    {
-        <span class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </span>
-    }
-</h1>
+<div class="container py-4">
 
-<table id="clientStats" class="table">
-    <thead>
-        <tr>
-            <th>Client IP</th>
-            <th>Total Cache Hit Bytes</th>
-            <th>Total Cache Miss Bytes</th>
-        </tr>
-    </thead>
-    <tbody>
-        @{
-            var totalMissService = clientDownloadStats.Sum(t => t.TotalCacheMissBytes);
-            var totalHitService = clientDownloadStats.Sum(t => t.TotalCacheHitBytes);
-            var uberTotalSerivce = totalMissService + totalHitService;
-            foreach (var stats in clientDownloadStats.OrderByDescending(t => t.TotalCacheHitBytes))
-            {
-                double cacheHitPercent = 0.0;
-                double cacheMissPercent = 0.0;
-                if ((stats.TotalCacheMissBytes + stats.TotalCacheHitBytes) != 0)
-                {
-                    cacheHitPercent = Math.Round(((double)stats.TotalCacheHitBytes / (uberTotalSerivce)) * 100, 2);
-                    cacheMissPercent = Math.Round(((double)stats.TotalCacheMissBytes / (uberTotalSerivce)) * 100, 2);
-                }
-                <tr class="@(_localStorage.GetItem<bool>(LocalStorageField.CompactLayoutEnabled) ? "compact-layout" : "")">
-                    <td>
-                        @if (backendBaseUrl != null && _localStorage.GetItem<bool>(LocalStorageField.HashImagesEnabled))
-                        {
-                            <div>@stats.Identifier</div>
-                            <div><img class="hashimage" src="@($"{backendBaseUrl}RoboHash/{stats.Identifier}?format=png&sizeX={DeveLanCacheUIConstants.HashImageSize}&sizeY={DeveLanCacheUIConstants.HashImageSize}")" title="@stats.Identifier" alt="Client Image" /></div>
-                        }
-                        else
-                        {
-                            @stats.Identifier
-                        }
-                    </td>
-                    <td>
-                        <progress max="100" value="@(cacheHitPercent.ToString(CultureInfo.InvariantCulture))"></progress>
-                        @($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(stats.TotalCacheHitBytes)} ({cacheHitPercent}%)")
-                    </td>
-                    <td>
-                        <progress max="100" value="@(cacheMissPercent.ToString(CultureInfo.InvariantCulture))"></progress>
-                        @($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(stats.TotalCacheMissBytes)} ({cacheMissPercent}%)")
-                    </td>
-                </tr>
-            }
-            <tr>
-                <td>Total</td>
-                <td>@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(totalHitService)</td>
-                <td>@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(totalMissService)</td>
-            </tr>
-        }
-    </tbody>
-</table>
-<h2 id="service-download-stats">Service Download Stats</h2>
-<table id="serviceStats" class="table">
-    <thead>
-        <tr>
-            <th>Service</th>
-            <th>Total Cache Hit Bytes</th>
-            <th>Total Cache Miss Bytes</th>
-        </tr>
-    </thead>
-    <tbody>
-        @{
-            var totalMissClients = serviceDownloadStats.Sum(t => t.TotalCacheMissBytes);
-            var totalHitClients = serviceDownloadStats.Sum(t => t.TotalCacheHitBytes);
-            var uberTotalClients = totalMissService + totalHitService;
-            foreach (var stats in serviceDownloadStats.OrderByDescending(t => t.TotalCacheHitBytes))
-            {
-                double cacheHitPercent = 0.0;
-                double cacheMissPercent = 0.0;
-                if ((stats.TotalCacheMissBytes + stats.TotalCacheHitBytes) != 0)
-                {
-                    cacheHitPercent = Math.Round(((double)stats.TotalCacheHitBytes / (uberTotalClients)) * 100, 2);
-                    cacheMissPercent = Math.Round(((double)stats.TotalCacheMissBytes / (uberTotalClients)) * 100, 2);
-                }
-                <tr class="@(_localStorage.GetItem<bool>(LocalStorageField.CompactLayoutEnabled) ? "compact-layout" : "")">
-                    <td>@stats.Identifier</td>
-                    <td>
-                        <progress max="100" value="@(cacheHitPercent.ToString(CultureInfo.InvariantCulture))"></progress>
-                        @($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(stats.TotalCacheHitBytes)} ({cacheHitPercent}%)")
-                    </td>
-                    <td>
-                        <progress max="100" value="@(cacheMissPercent.ToString(CultureInfo.InvariantCulture))"></progress>
-                        @($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(stats.TotalCacheMissBytes)} ({cacheMissPercent}%)")
-                    </td>
-                </tr>
-            }
-            <tr>
-                <td>Total</td>
-                <td>@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(totalHitClients)</td>
-                <td>@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(totalMissClients)</td>
-            </tr>
-        }
+    <!-- HEADER -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h1 class="fw-bold m-0">Download Stats</h1>
 
-    </tbody>
-</table>
+        <div class="d-flex align-items-center gap-3">
+            <span class="status-dot @(IsConnected ? "bg-success" : "bg-danger")"></span>
+
+            @if (loading)
+            {
+                <div class="spinner-border spinner-border-sm text-primary"></div>
+            }
+        </div>
+    </div>
+
+    <!-- CLIENT STATS -->
+    <div class="card shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-transparent border-0 fw-semibold">
+            Client Download Stats
+        </div>
+
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Client</th>
+                        <th>Cache Hit</th>
+                        <th>Cache Miss</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @{
+                        var totalMissService = clientDownloadStats.Sum(t => t.TotalCacheMissBytes);
+                        var totalHitService = clientDownloadStats.Sum(t => t.TotalCacheHitBytes);
+                        var uberTotalSerivce = totalMissService + totalHitService;
+
+                        foreach (var stats in clientDownloadStats.OrderByDescending(t => t.TotalCacheHitBytes))
+                        {
+                            double cacheHitPercent = 0;
+                            double cacheMissPercent = 0;
+
+                            if ((stats.TotalCacheMissBytes + stats.TotalCacheHitBytes) != 0)
+                            {
+                                cacheHitPercent = Math.Round(((double)stats.TotalCacheHitBytes / uberTotalSerivce) * 100, 2);
+                                cacheMissPercent = Math.Round(((double)stats.TotalCacheMissBytes / uberTotalSerivce) * 100, 2);
+                            }
+
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        @if (backendBaseUrl != null && _localStorage.GetItem<bool>(LocalStorageField.HashImagesEnabled))
+                                        {
+                                            <img class="rounded-circle shadow-sm"
+                                                 width="40"
+                                                 height="40"
+                                                 src="@($"{backendBaseUrl}RoboHash/{stats.Identifier}?size=40x40")" />
+                                        }
+
+                                        <span class="fw-semibold">@stats.Identifier</span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="progress mb-1">
+                                        <div class="progress-bar bg-success"
+                                             style="width: @cacheHitPercent%"></div>
+                                    </div>
+                                    <small class="text-muted">
+                                        @($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(stats.TotalCacheHitBytes)} ({cacheHitPercent}%)")
+                                    </small>
+                                </td>
+
+                                <td>
+                                    <div class="progress mb-1">
+                                        <div class="progress-bar bg-danger"
+                                             style="width: @cacheMissPercent%"></div>
+                                    </div>
+                                    <small class="text-muted">
+                                        @($"{DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(stats.TotalCacheMissBytes)} ({cacheMissPercent}%)")
+                                    </small>
+                                </td>
+                            </tr>
+                        }
+
+                        <tr class="fw-bold">
+                            <td>Total</td>
+                            <td>@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(totalHitService)</td>
+                            <td>@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(totalMissService)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SERVICE STATS -->
+    <div class="card shadow-sm rounded-4">
+        <div class="card-header bg-transparent border-0 fw-semibold">
+            Service Download Stats
+        </div>
+
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Service</th>
+                        <th>Cache Hit</th>
+                        <th>Cache Miss</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @{
+                        var totalMissClients = serviceDownloadStats.Sum(t => t.TotalCacheMissBytes);
+                        var totalHitClients = serviceDownloadStats.Sum(t => t.TotalCacheHitBytes);
+                        var uberTotalClients = totalMissClients + totalHitClients;
+
+                        foreach (var stats in serviceDownloadStats.OrderByDescending(t => t.TotalCacheHitBytes))
+                        {
+                            double cacheHitPercent = 0;
+                            double cacheMissPercent = 0;
+
+                            if ((stats.TotalCacheMissBytes + stats.TotalCacheHitBytes) != 0)
+                            {
+                                cacheHitPercent = Math.Round(((double)stats.TotalCacheHitBytes / uberTotalClients) * 100, 2);
+                                cacheMissPercent = Math.Round(((double)stats.TotalCacheMissBytes / uberTotalClients) * 100, 2);
+                            }
+
+                            <tr>
+                                <td class="fw-semibold">@stats.Identifier</td>
+
+                                <td>
+                                    <div class="progress mb-1">
+                                        <div class="progress-bar bg-success"
+                                             style="width: @cacheHitPercent%"></div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="progress mb-1">
+                                        <div class="progress-bar bg-danger"
+                                             style="width: @cacheMissPercent%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+
+                        <tr class="fw-bold">
+                            <td>Total</td>
+                            <td>@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(totalHitClients)</td>
+                            <td>@DeveCoolLib.Conversion.ValuesToStringHelper.BytesToString(totalMissClients)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
 @code {
     private List<DownloadStats> clientDownloadStats = new List<DownloadStats>();
     private List<DownloadStats> serviceDownloadStats = new List<DownloadStats>();
 
     private HubConnection hubConnection;
-
     private bool loading = true;
-
     public string? backendBaseUrl;
 
     protected override async Task OnInitializedAsync()
@@ -143,7 +194,6 @@
 
         hubConnection.On("UpdateDownloadEvents", async () =>
         {
-            Console.WriteLine($"{DateTime.Now}: UpdateDownloadEvents");
             await LoadData();
         });
 
@@ -154,18 +204,17 @@
     {
         loading = true;
         StateHasChanged();
-        var getDownloadStatsPerClientUrl = await _backendConnectionService.CreateBackendUrlAsync("DownloadStats/GetDownloadStatsPerClient");
-        var newClientStats = await Http.GetFromJsonAsync<DownloadStats[]>(getDownloadStatsPerClientUrl);
+
+        var clientUrl = await _backendConnectionService.CreateBackendUrlAsync("DownloadStats/GetDownloadStatsPerClient");
+        var newClientStats = await Http.GetFromJsonAsync<DownloadStats[]>(clientUrl);
         if (newClientStats != null)
-        {
             clientDownloadStats = newClientStats.ToList();
-        }
-        var getDownloadStatsPerServiceUrl = await _backendConnectionService.CreateBackendUrlAsync("DownloadStats/GetDownloadStatsPerService");
-        var newServiceStats = await Http.GetFromJsonAsync<DownloadStats[]>(getDownloadStatsPerServiceUrl);
+
+        var serviceUrl = await _backendConnectionService.CreateBackendUrlAsync("DownloadStats/GetDownloadStatsPerService");
+        var newServiceStats = await Http.GetFromJsonAsync<DownloadStats[]>(serviceUrl);
         if (newServiceStats != null)
-        {
             serviceDownloadStats = newServiceStats.ToList();
-        }
+
         loading = false;
         StateHasChanged();
     }
@@ -175,12 +224,25 @@
     public async ValueTask DisposeAsync()
     {
         if (hubConnection is not null)
-        {
             await hubConnection.DisposeAsync();
-        }
     }
 }
 
 <style>
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
 
+.card {
+    border: none;
+}
+
+.progress {
+    height: 6px;
+    border-radius: 10px;
+    background-color: #e9ecef;
+}
 </style>

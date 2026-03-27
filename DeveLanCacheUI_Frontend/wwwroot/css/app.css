@@ -99,3 +99,20 @@ a, .btn-link {
     .loading-progress-text:after {
         content: var(--blazor-load-percentage-text, "Loading");
     }
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.card {
+    border: none;
+}
+
+.progress {
+    height: 6px;
+    border-radius: 10px;
+    background-color: #e9ecef;
+}
